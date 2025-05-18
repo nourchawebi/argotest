@@ -1,18 +1,29 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name:  astonvilla-app
-  namespace: argocd
+  name: astonvilla
+  namespace: internship
+
 spec:
-  project: default
-  destination:
-    namespace: internship
-    server: https://kubernetes.default.svc # ken bch namlou apply manual al cluster nktbou   https://kubernetes.default.svc
-  source:
-    path: astonvilla-app # you chould provide the folder in the git repo
-    repoURL: "https://github.com/nourchawebi/argotest.git" # the url of the github repository
-    targetRevision: HEAD # the branch of the github repository.We can use Head or a specific version
-  syncPolicy:
-    automated: {} # This will detect changes automatically from the repository
-    syncOptions:
-      - CreateNamespace=true
+  replicas: 1
+  
+  template:
+    metadata:
+      labels:
+        app: astonvilla-pod
+    spec:
+      containers:
+      - name: astonvilla
+        image: nourchawebi/astonvilla:1.1.8
+        ports:
+        - containerPort : 80
+        resources :
+          requests:
+            memory: "256Mi"
+            cpu : "250m"
+          limits: 
+            memory: "512Mi"
+            cpu: "500m"
+  selector:
+    matchLabels: 
+      app : astonvilla-pod
