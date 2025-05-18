@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: astonvilla
-        image: nourchawebi/astonvilla:1.1.8
+        image: nourchawebi/astonvilla:1.1.20
         ports:
         - containerPort : 80
         resources :
