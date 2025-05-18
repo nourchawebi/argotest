@@ -1,52 +1,18 @@
-name: build and push docker image to docker hub
-
-on:
-  push:
-    branches:
-      - master
-
-jobs:
-  push_to_dockerhub:
-    name: build and push docker image, then update argotest repo
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout this repo
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: nourchawebi/astonvilla:1.1.${{ github.run_number }}
-
-      - name: Checkout argotest repo
-        uses: actions/checkout@v4
-        with:
-          repository: nourchawebi/argotest
-          token: ${{ secrets.GHCR_TOKEN }} # Crée un token PAT avec accès en écriture
-          path: argotest
-          ref: main
-
-      - name: Update image tag in astonvilla-deployment.yaml
-        run: |
-          sed -i 's|image: nourchawebi/astonvilla:.*|image: nourchawebi/astonvilla:1.1.${{ github.run_number }}|' argotest/astonvilla-app/astonvilla-deployment.yaml
-
-      - name: Commit and push changes to argotest
-        run: |
-          cd argotest
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add astonvilla-app/astonvilla-deployment.yaml
-          git commit -m "Update astonvilla image tag to 1.1.${{ github.run_number }}"
-          git push
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name:  astonvilla-app
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    namespace: internship
+    server: https://kubernetes.default.svc # ken bch namlou apply manual al cluster nktbou   https://kubernetes.default.svc
+  source:
+    path: astonvilla-app # you chould provide the folder in the git repo
+    repoURL: "https://github.com/nourchawebi/argotest.git" # the url of the github repository
+    targetRevision: HEAD # the branch of the github repository.We can use Head or a specific version
+  syncPolicy:
+    automated: {} # This will detect changes automatically from the repository
+    syncOptions:
+      - CreateNamespace=true
